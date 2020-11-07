@@ -1,6 +1,7 @@
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from string import punctuation
+from heapq import nlargest
 
 # getting stopwords and punctuations to remove from doc
 stopwords = list(STOP_WORDS)
@@ -28,11 +29,28 @@ for token in doc:
                 except:
                     print('error')
 
+# normalizing count_words
 max_count = max(count_words.values())
-
 normalized_count = count_words
 for key in normalized_count.keys():
     normalized_count[key] = normalized_count[key] / max_count
 
+# getting mostly used sentences by creating sentence score with help of count_words 
 sentences = [sent for sent in doc.sents]
-print(sentences)
+sentence_score = {}
+for sent in sentences:
+    for word in sent:
+        if word.text.lower() in normalized_count.keys():
+            if sent not in sentence_score.keys():
+                sentence_score[sent] = normalized_count[word.text.lower()]
+            else:
+                sentence_score[sent] += normalized_count[word.text.lower()]
+
+# Creating summary
+summary_length = int(len(sentences)*0.25)
+summary = nlargest(summary_length,sentence_score,sentence_score.get)
+if len(summary) > 1:
+    final_summary = ' '.join(summary)
+else:
+    final_summary = summary
+print(final_summary)
